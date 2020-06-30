@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Net.Http;
 using System.Linq;
 using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Ocelot.Logging;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Ocelot.Authentication.Extensions.ApiKey
 {
@@ -76,7 +76,7 @@ namespace Ocelot.Authentication.Extensions.ApiKey
                 {
                     key = providedApiKey,
                 };
-                body = new StringContent(JsonSerializer.Serialize(bodyData), Encoding.UTF8, "application/json");
+                body = new StringContent(JsonConvert.SerializeObject(bodyData), Encoding.UTF8, "application/json");
             }
 
             var message = new HttpRequestMessage(Options.Method, url)
@@ -92,14 +92,14 @@ namespace Ocelot.Authentication.Extensions.ApiKey
             }
 
             var responseBody = await response.Content.ReadAsStringAsync();
-            var responseObject = JsonSerializer.Deserialize<ApiKeyValidationResponse>(responseBody);
+            var responseObject = JsonConvert.DeserializeObject<ApiKeyValidationResponse>(responseBody);
 
             var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, responseObject.Owner),
                 };
 
-            claims.AddRange(responseObject.Scopes.Select(role => new Claim(ClaimTypes.Role, role)));
+            claims.AddRange(responseObject.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
             var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
             var identities = new List<ClaimsIdentity> { identity };
@@ -121,7 +121,7 @@ namespace Ocelot.Authentication.Extensions.ApiKey
                 Detail = "Unauthorized",
             };
 
-            await Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
+            await Response.WriteAsync(JsonConvert.SerializeObject(problemDetails));
         }
 
         protected override async Task HandleForbiddenAsync(AuthenticationProperties properties)
@@ -136,7 +136,7 @@ namespace Ocelot.Authentication.Extensions.ApiKey
                 Detail = "Forbidden",
             };
 
-            await Response.WriteAsync(JsonSerializer.Serialize(problemDetails));
+            await Response.WriteAsync(JsonConvert.SerializeObject(problemDetails));
         }
     }
 }

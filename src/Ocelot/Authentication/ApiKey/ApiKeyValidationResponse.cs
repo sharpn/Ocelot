@@ -5,7 +5,7 @@ namespace Ocelot.Authentication.Extensions.ApiKey
 {
     public class ApiKeyValidationResponse
     {
-        public string Owner { get; }
-        public IReadOnlyCollection<string> Scopes { get; }
+        public string Owner { get; set; }
+        public IReadOnlyCollection<string> Roles { get; set; }
     }
 }
