@@ -96,10 +96,10 @@ namespace Ocelot.Authentication.Extensions.ApiKey
 
             var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Name, responseObject.Owner),
+                    new Claim("Owner", responseObject.Owner),
                 };
 
-            claims.AddRange(responseObject.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+            claims.AddRange(responseObject.Roles.Select(role => new Claim("Role", role)));
 
             var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
             var identities = new List<ClaimsIdentity> { identity };
