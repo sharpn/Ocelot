@@ -138,6 +138,47 @@ namespace Ocelot.AcceptanceTests
         }
 
         [Fact]
+        public void should_return_401_using_post()
+        {
+            var port = RandomPortFinder.GetRandomPort();
+
+            var configuration = new FileConfiguration
+            {
+                Routes = new List<FileRoute>
+                {
+                    new FileRoute
+                    {
+                        DownstreamPathTemplate = _downstreamServicePath,
+                        DownstreamHostAndPorts = new List<FileHostAndPort>
+                        {
+                            new FileHostAndPort
+                            {
+                                Host = _downstreamServiceHost,
+                                Port = port
+                            }
+                        },
+                        DownstreamScheme = _downstreamServiceScheme,
+                        UpstreamPathTemplate = "/",
+                        UpstreamHttpMethod = new List<string>{"Post"},
+                        AuthenticationOptions = new FileAuthenticationOptions
+                        {
+                            AuthenticationProviderKey = "TestApiKey"
+                        }
+                    }
+                }
+            };
+
+            this.Given(x => x.GivenThereIsAServiceRunningOn($"{_downstreamServiceUrl}{port}", 201, string.Empty))
+                .And(x => x.GivenThereIsAMockKeyValidationApiServerOn(_apiServerRootUrl, _apiKeyValidationPath, new string[] { "testing" }))
+                .And(x => _steps.GivenThereIsAConfiguration(configuration))
+                .And(x => _steps.GivenOcelotIsRunning(_postOptions, "TestApiKey"))
+                .And(x => _steps.GivenThePostHasContent("postContent"))
+                .When(x => _steps.WhenIPostUrlOnTheApiGateway("/"))
+                .Then(x => _steps.ThenTheStatusCodeShouldBe(HttpStatusCode.Unauthorized))
+                .BDDfy();
+        }
+
+        [Fact]
         public void should_return_201_using_api_key_with_post()
         {
             var port = RandomPortFinder.GetRandomPort();
